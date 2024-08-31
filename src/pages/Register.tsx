@@ -1,10 +1,10 @@
 import React from 'react';
 import type { FormProps } from 'antd';
-import { Button, Checkbox, Form, Input, message } from 'antd';
+import { Button, Checkbox, Form, Input, message, Spin } from 'antd';
 import Typography from 'antd/es/typography/Typography';
 import fetchUtils from '../utils/fetchUtils';
-import { setToken } from '../utils/storage';
-import { Link } from "react-router-dom";
+import { setUserData } from '../utils/storage';
+import { Link, useNavigate } from "react-router-dom";
 
 type FieldType = {
   email?: string;
@@ -21,14 +21,17 @@ const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
 
 const Register: React.FC = () => {
 
+    const [isLoading, setIsLoading] = React.useState(false);
     const [messageApi, contextHolder] = message.useMessage();
+    const navigate = useNavigate();
 
     const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
         console.log('Success:', values);
         // TODO: register
-
       
             try {
+                setIsLoading(true);
+
               const result = await fetchUtils('/auth/register', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -37,56 +40,36 @@ const Register: React.FC = () => {
                     'password': values.password
                 })
 
-              }); // Adjust the endpoint as necessary
-              console.log(result);
-              //set token
-              setToken(result);
+                }); // Adjust the endpoint as necessary
+
+                console.log(result);
+                //set token
+                setUserData(result);
                 messageApi.open({
                     type: 'success',
                     content: 'User created successfully',
                 });
+
+                setTimeout(navigate, 0, "/flights");
+
             } catch (err) {
               console.log(err);
                 messageApi.open({
                     type: 'error',
                     content: err + "Please try again!!",
                 });
+            } finally {
+                setIsLoading(false);
             }
-       
-
-        // fetch('http://localhost:3000/', {
-        //     method: 'POST',
-        //     headers: {
-        //       'accept': 'application/json',
-        //       'Content-Type': 'application/json'
-        //     },
-        //     // body: '{\n  "name": "asmaa",\n  "email": "asmaa@mail.com",\n  "password": "as123"\n}',
-        //     body: JSON.stringify({
-        //       'name': values.username,
-        //       'email': values.email,
-        //       'password': values.password
-        //     })
-        // }).then((res) => {
-        //     if(res.status === 201) {
-        //        
-        //     }
-        //     console.log(res);
-            
-        //     return res.json();
-        //   })
-        //   .then((res) => { 
-        //     console.log(res, "ehhhhhhh");
-        //     if(res.status !== 200) {
-        //        
-        //     }
-
-        //    
-        // })
     };
 
   return  <>
       {contextHolder}
 
+      {isLoading && (
+        <Spin tip="Loading" size="large">
+        </Spin>
+        )}
       <Typography>Don't have an account?</Typography>
       <span>Sign up with your email and password</span>
       

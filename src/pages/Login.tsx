@@ -1,7 +1,9 @@
 import React from 'react';
 import type { FormProps } from 'antd';
-import { Button, Form, Input, message } from 'antd';
-import { Link } from "react-router-dom";
+import { Button, Form, Input, message, Spin } from 'antd';
+import { Link, useNavigate } from "react-router-dom";
+import fetchUtils from '../utils/fetchUtils';
+import { setUserData } from '../utils/storage';
 
 type FieldType = {
   username?: string;
@@ -17,47 +19,51 @@ const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
 
 const Login: React.FC = () => {
 
+    const [isLoading, setIsLoading] = React.useState(false);
     const [messageApi, contextHolder] = message.useMessage();
+    const navigate = useNavigate();
 
-    const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
+    const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
         console.log('Success:', values);
         // TODO: login
-    
-        fetch('http://localhost:3000/auth/login', {
-        method: 'POST',
-        headers: {
-            'accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            'email': values.username,
-            'password': values.password
-        })
-        }).then((res) => {
-            if(res.status === 200) {
-                messageApi.open({
-                    type: 'success',
-                    content: 'This is a success message',
-                });
-            }
-            console.log(res);
-            
-            return res.json();
-          })
-          .then((res) => { 
-            console.log(res, "ehhhhhhh");
-            if(res.status !== 200) {
-                messageApi.open({
-                    type: 'error',
-                    content: res.message
-                });
-            }
-        })
-    
+        try {
+            setIsLoading(true);
+
+            const result = await fetchUtils('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                'email': values.username,
+                    'password': values.password
+                })
+
+            }); // Adjust the endpoint as necessary
+            console.log(result);
+            //set token
+            setUserData(result);
+            messageApi.open({
+                type: 'success',
+                content: 'User Logged in successfully',
+            });
+
+            setTimeout(navigate, 0, "/flights");
+
+        } catch (err) {
+            console.log(err);
+            messageApi.open({
+                type: 'error',
+                content: err + "Please try again!!",
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
   return  <>
       {contextHolder}
+      {isLoading && (
+        <Spin tip="Loading" size="large">
+        </Spin>
+        )}
         <span> Login with email </span>
 
         <Form

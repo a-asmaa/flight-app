@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Flight } from '../types/flight';
 import { Space, Table, TableProps } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import AppLayout from '../layout';
+import { getToken } from '../utils/storage';
 
 
 const columns: TableProps<Flight>['columns'] = [
@@ -40,11 +42,12 @@ export default function FlightList() {
 
     useEffect(() => {
       console.log(process.env.REACT_APP_URL)
+      const token = getToken();
 
       fetch(`http://localhost:3000/flights?page=${page}&size=${size}`, {
         headers: {
           'accept': 'application/json',
-          'Authorization': 'Bearer yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA0MjU1MTI5LWViOWQtNDU5Yy1hYzE2LWM3NTkxN2E4Nzk4MCIsIm5hbWUiOiJhc21hYSIsImVtYWlsIjoiYXNtYWFAbWFpbC5jb20iLCJpYXQiOjE3MjUwNTk0MjYsImV4cCI6MTcyNTA2MDYyNn0.gMsJkkQA4IKTfPKgPMMiIBqf7zRbxFyygS55MTADH9k'
+          'Authorization': `Bearer ${token}`
         }
       })
         .then((res) => {
@@ -56,11 +59,6 @@ export default function FlightList() {
         });
     }, []);
   return (
-    <div>
-      {/* Header  */}
-      
-      {/* TODO: add Filter  */}
-        <Table columns={columns} dataSource={flights} />
-    </div>
+    <AppLayout children={<Table columns={columns} dataSource={flights} />} />
   )
 }

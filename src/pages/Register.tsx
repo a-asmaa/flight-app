@@ -1,7 +1,6 @@
 import React from 'react';
 import type { FormProps } from 'antd';
-import { Button, Checkbox, Form, Input, message, Spin } from 'antd';
-import Typography from 'antd/es/typography/Typography';
+import { Button, Checkbox, Form, Input, message, Spin, Typography, Row, Col } from 'antd';
 import fetchUtils from '../utils/fetchUtils';
 import { setUserData } from '../utils/storage';
 import { Link, useNavigate } from "react-router-dom";
@@ -10,124 +9,121 @@ type FieldType = {
   email?: string;
   username?: string;
   password?: string;
-  remember?: string;
+  remember?: boolean;
 };
-
 
 const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
   console.log('Failed:', errorInfo);
 };
 
-
 const Register: React.FC = () => {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
+  const navigate = useNavigate();
 
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [messageApi, contextHolder] = message.useMessage();
-    const navigate = useNavigate();
+  const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
+    console.log('Success:', values);
 
-    const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
-        console.log('Success:', values);
-        // TODO: register
-      
-            try {
-                setIsLoading(true);
+    try {
+      setIsLoading(true);
 
-              const result = await fetchUtils('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify({
-                    'name': values.username,
-                    'email': values.email,
-                    'password': values.password
-                })
+      const result = await fetchUtils('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          'name': values.username,
+          'email': values.email,
+          'password': values.password,
+        }),
+      });
 
-                }); // Adjust the endpoint as necessary
+      console.log(result);
+      setUserData(result);
+      messageApi.open({
+        type: 'success',
+        content: 'User created successfully',
+      });
 
-                console.log(result);
-                //set token
-                setUserData(result);
-                messageApi.open({
-                    type: 'success',
-                    content: 'User created successfully',
-                });
+      setTimeout(navigate, 0, "/flights");
+    } catch (err) {
+      console.log(err);
+      messageApi.open({
+        type: 'error',
+        content: err + " Please try again!",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-                setTimeout(navigate, 0, "/flights");
-
-            } catch (err) {
-              console.log(err);
-                messageApi.open({
-                    type: 'error',
-                    content: err + "Please try again!!",
-                });
-            } finally {
-                setIsLoading(false);
-            }
-    };
-
-  return  <>
+  return (
+    <>
       {contextHolder}
 
       {isLoading && (
-        <Spin tip="Loading" size="large">
+        <Spin tip="Loading" size="large" style={{ width: '100%', marginTop: 20 }}>
+          <div style={{ height: '100vh' }}></div>
         </Spin>
-        )}
-      <Typography>Don't have an account?</Typography>
-      <span>Sign up with your email and password</span>
-      
-        <Form
-            name="basic"
-            labelCol={{ span: 8 }}
-            wrapperCol={{ span: 16 }}
-            style={{ maxWidth: 600 }}
-            initialValues={{ remember: true }}
+      )}
+
+      <Row justify="center" style={{ marginTop: 50 }}>
+        <Col xs={24} sm={16} md={12} lg={8} xl={6}>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <Typography.Title level={3}>Sign Up</Typography.Title>
+            <Typography.Text type="secondary">Create your account</Typography.Text>
+          </div>
+
+          <Form
+            name="register"
+            layout="vertical"
             onFinish={onFinish}
             onFinishFailed={onFinishFailed}
             autoComplete="off"
-        >
+          >
             <Form.Item<FieldType>
-                label="Username"
-                name="username"
-                rules={[{ required: true, message: 'Please input your username!' }]}
+              label="Username"
+              name="username"
+              rules={[{ required: true, message: 'Please input your username!' }]}
             >
-            <Input />
-            </Form.Item>
-
-            <Form.Item<FieldType>
-                label="Email"
-                name="email"
-                rules={[{ required: true, message: 'Please input your email!' }]}
-            >
-            <Input />
+              <Input placeholder="Enter your username" />
             </Form.Item>
 
             <Form.Item<FieldType>
-                label="Password"
-                name="password"
-                rules={[{ required: true, message: 'Please input your password!' }]}
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: 'Please input your email!' }]}
             >
-            <Input.Password />
+              <Input placeholder="Enter your email" />
             </Form.Item>
 
             <Form.Item<FieldType>
-                name="remember"
-                valuePropName="checked"
-                wrapperCol={{ offset: 8, span: 16 }}
+              label="Password"
+              name="password"
+              rules={[{ required: true, message: 'Please input your password!' }]}
             >
-            <Checkbox>Remember me</Checkbox>
+              <Input.Password placeholder="Enter your password" />
             </Form.Item>
 
-            <Form.Item
-                wrapperCol={{ offset: 8, span: 16 }}
+            <Form.Item<FieldType>
+              name="remember"
+              valuePropName="checked"
             >
-                Already have an account? <Link to='/login'> Login</Link>
+              <Checkbox>Remember me</Checkbox>
             </Form.Item>
 
-            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-            <Button type="primary" htmlType="submit">
-                Submit
-            </Button>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block>
+                Sign Up
+              </Button>
             </Form.Item>
-        </Form>
+
+            <Typography.Text>
+              Already have an account? <Link to="/login">Login</Link>
+            </Typography.Text>
+          </Form>
+        </Col>
+      </Row>
     </>
+  );
 };
 
 export default Register;

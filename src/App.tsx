@@ -5,12 +5,15 @@ import CreateFlight from './pages/CreateFlight';
 import Register from './pages/Register';
 import {BrowserRouter,Route,Routes} from "react-router-dom";
 import ProtectedRoute from './utils/ProtectedRoute';
+import BadRequest from './pages/ErrorPage';
 
 const App: React.FC = () => {
 
   return (
     <BrowserRouter>
     <Routes>
+        <Route path="/bad-request" element={<BadRequest />} />
+
         <Route path="/login" element={<Login/>} />
         <Route path="/register" element={<Register/>} />
         <Route path="/flights" element={

@@ -11,3 +11,17 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+.create-link{
+  font-weight: 600;
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.list-link{
+  font-weight: 600;
+  color: black;
+  font-size: 18px;
+}

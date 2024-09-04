@@ -1,27 +1,27 @@
 import React from 'react';
-import { Breadcrumb, Button, Layout, theme } from 'antd';
+import { Breadcrumb, Button, Layout, Space, theme } from 'antd';
 import { clearToken, getUser } from './utils/storage';
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthUser } from './types/user';
 
 const { Header, Content } = Layout;
 
-const AppLayout = ({children} : {children: any}) => {
+const AppLayout = ({ children }: { children: any }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
   const user: AuthUser = getUser();
-
   const navigate = useNavigate();
+  let location = useLocation();
 
   const logout = () => {
-
     clearToken();
     setTimeout(navigate, 0, "/login");
   }
 
-    return <Layout>
+  return (
+    <Layout>
       <Header
         style={{
           position: 'sticky',
@@ -31,22 +31,30 @@ const AppLayout = ({children} : {children: any}) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          color: 'white',
+          background: '#001529',
+          padding: '0 24px',
           gap: '1rem',
+          color: 'white',
         }}
       >
-        <img className="demo-logo" src="/assets/Logo.svg" alt="logo" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}> 
-          <h4 > {user.name}, Logged in </h4>
-          <Button onClick={logout}> Logout</Button>
+        <img className="demo-logo" src="/assets/Logo.svg" alt="logo" style={{ height: 40 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <h4>{user.name}, Logged in</h4>
+          <Button onClick={logout} type="primary">Logout</Button>
         </div>
       </Header>
-      <Content style={{ padding: '0 48px', height: '100vh' }}>
-        <Breadcrumb style={{ margin: '16px 0' }}>
-          <Breadcrumb.Item>Flight List</Breadcrumb.Item>
-        </Breadcrumb>
+      <Content style={{ padding: '24px 48px', minHeight: 'calc(100vh - 64px)' }}>
+        <Space style={{ justifyContent: 'space-between', display: 'flex' }}>
+          <Breadcrumb style={{ margin: '16px 0' }}>
+            <Breadcrumb.Item>
+              <Link to="/flights" className='list-link'>Flight List </Link>
+            </Breadcrumb.Item>
+          </Breadcrumb>
+          { !location.pathname.includes('/create') && <Link to="/flights/create" className='create-link'>Create New Flight</Link> }
+        </Space>
         <div
           style={{
+            marginTop: 24,
             padding: 24,
             minHeight: 380,
             background: colorBgContainer,
@@ -57,6 +65,7 @@ const AppLayout = ({children} : {children: any}) => {
         </div>
       </Content>
     </Layout>
+  );
 };
 
 export default AppLayout;

@@ -1,79 +1,142 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, DatePicker, Form, Input, InputNumber, Upload, Typography, Row, Col, message, FormProps } from 'antd';
+import { Button, DatePicker, Form, Input, InputNumber, Upload, Typography, Row, Col, message, FormProps, Spin, UploadProps, Space } from 'antd';
 import AppLayout from '../layout';
 import fetchUtils from '../utils/fetchUtils';
-import { useNavigate } from 'react-router';
-import { log } from 'console';
+import { useNavigate, useParams } from 'react-router';
+import { FieldType, Flight } from '../types/flight';
+import { getToken } from '../utils/storage';
+import { getPayload } from '../utils/getPayload';
+import { ErrorResponse } from '../types/response';
 
-const normFile = (e: any) => {
-  if (Array.isArray(e)) {
-    return e;
-  }
-  console.log(e, "files");
-  
-  return e?.fileList;
-};
-
-type FieldType = {
-  code: string;
-  departureDate: Object;
-  capacity: number;
-  photo?: string;
-};
 
 const CreateFlight: React.FC = () => {
 
   const [messageApi, contextHolder] = message.useMessage();
   const [departureDate, setDepartureDate] = useState<string|null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [defaultValues, setDefaultValues] = useState<Flight>({
+    id: '',
+    capacity: 0,
+    code: '',
+    departureDate: '',
+    img: '',
+    status: '',
+  });
   const navigate = useNavigate();
+  const {flightId} = useParams();
 
-  const handleCreateFlight: FormProps<FieldType>['onFinish'] = async (values) => {
-    console.log('Success:', values);
+
+  const normFile = (e: any) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    console.log(e, "files");
+    return e?.fileList;
+  };
+  
+  const props: UploadProps = {
+    beforeUpload: (file) => {
+      const isPNG = file.type === 'image/png';
+      if (!isPNG) {
+        message.error(`${file.name} is not a png file`);
+      }
+      return false;;
+    },
+  };
+
+  
+  const handleSaveFlight: FormProps<FieldType>['onFinish'] = async (values) => {
 
     try {
 
-      const _body = {
-        'code': values.code,
-        'capacity': values.capacity,
-        'departureDate':  departureDate  // '2020-10-23'
-      };
+      const withImage = values.upload !== undefined;
+      const payload = getPayload(values, departureDate, withImage);
+  
+      if(flightId) { // update flight
+        const url = `/flights/${flightId}`.concat('', withImage ? '/withPhoto' : '');        
+        const result = await fetchUtils(url , {
+          method: 'PUT',
+          body: payload,
+          headers: {
+            "Content-Type": withImage ? "multipart/form-data" : "application/json",
+            "Authorization": `Bearer ${getToken()}`
+          }
+        });
+  
+        console.log(result);
+        messageApi.open({ // TODO: fix this
+          type: 'success',
+          content: 'Flight updated successfully',
+        });
+      } else { //create new flight
 
-      // if() {
-      //   _body['photo'] = values.photo
-      // }
+        const url = '/flights'.concat('', withImage ? '/withPhoto' : '');        
+        const result = await fetchUtils(url, {
+          method: 'POST',
+          headers: {
+            "Content-Type": withImage ? "multipart/form-data" : "application/json",
+            "authorization": `Bearer ${getToken()}`
+          },
+          body: payload,
+        });
+  
+        console.log(result);
+        messageApi.open({ // TODO: fix this
+          type: 'success',
+          content: 'Flight created successfully',
+        });
+      }
 
-      const result = await fetchUtils('/flights', {
-        method: 'POST',
-        body: JSON.stringify(_body),
-      });
-
-      console.log(result);
-      messageApi.open({ // TODO: fix this
-        type: 'success',
-        content: 'Flight created successfully',
-      });
-      
       setTimeout(navigate, 0, "/flights");
     } catch (err) {
       console.log(err);
       messageApi.open({ // TODO: fix this
         type: 'error',
-        content: err + " Please try again!",
+        content: (err as ErrorResponse).message + " Please try again!",
         duration: 5,
       });
     }
   };
 
-  
+  const getFlightById = async (id: string) => {
+
+    try {
+      setLoading(true);
+      const result = await fetchUtils(`/flights/${id}/details`);
+      console.log(flightId, "flightId", result);
+      setDefaultValues(result);
+
+    } catch (error) {
+      messageApi.error({
+        type: 'error',
+        content: error + " Please try again!",
+        duration: 3,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (flightId) {
+      getFlightById(flightId);
+    }
+  }, [flightId])
+
 
   return (
     <AppLayout>
      { contextHolder}
-      <Row justify="center" style={{ marginTop: 50 }}>
-        <Col xs={24} sm={20} md={16} lg={12} xl={8}>
-          <Typography.Title level={3} style={{ textAlign: 'center', marginBottom: 20 }}>
-            Create Flight
+      { loading ? 
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '380px'}}>
+          <Spin size='large' />
+        </div> 
+      : 
+      <Row style={{ marginTop: 5, width: '100%' }}>
+        <Col xs={24} sm={20} md={16} lg={16} xl={12}>
+          <Typography.Title level={3} style={{ marginBottom: 20 }}>
+            { flightId ? 'Edit' : 'Create' } Flight
           </Typography.Title>
 
           <Form
@@ -81,10 +144,10 @@ const CreateFlight: React.FC = () => {
             wrapperCol={{ span: 16 }}
             layout="horizontal"
             style={{ maxWidth: '100%' }}
-            onFinish={handleCreateFlight}
+            onFinish={handleSaveFlight}
           >
             <Form.Item label="Code" name="code" rules={[{ required: true, message: 'Please enter flight code!' }]}>
-              <Input placeholder="Enter flight code" />
+              <Input defaultValue={defaultValues.code} placeholder="Enter flight code" />
             </Form.Item>
 
             <Form.Item
@@ -104,7 +167,7 @@ const CreateFlight: React.FC = () => {
               name="capacity"
               rules={[{ required: true, message: 'Please enter capacity!' }]}
             >
-              <InputNumber placeholder="Enter capacity" style={{ width: '100%' }} />
+              <InputNumber placeholder="Enter capacity" defaultValue={defaultValues.capacity} style={{ width: '100%' }} />
             </Form.Item>
 
             <Form.Item
@@ -113,7 +176,7 @@ const CreateFlight: React.FC = () => {
               valuePropName="fileList"
               getValueFromEvent={normFile}
             >
-              <Upload action="/upload.do" listType="picture-card">
+              <Upload listType="picture-card" maxCount={1} {...props}>
                 <div>
                   <PlusOutlined />
                   <div style={{ marginTop: 8 }}>Upload</div>
@@ -121,14 +184,19 @@ const CreateFlight: React.FC = () => {
               </Upload>
             </Form.Item>
 
-            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-              <Button type="primary" htmlType="submit" block>
-                Submit
-              </Button>
+            <Form.Item wrapperCol={{ offset: 8, span: 16 }} style={{}}>
+              <Space>
+                <Button type="primary" htmlType="submit">
+                  Submit
+                </Button>
+                <Button type="default" onClick={() => navigate('/flights')} >
+                  Cancel
+                </Button>
+              </Space>
             </Form.Item>
           </Form>
         </Col>
-      </Row>
+      </Row>}
     </AppLayout>
   );
 };

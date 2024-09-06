@@ -1,6 +1,6 @@
 // utils/fetchUtils.js
 
-const BASE_URL = 'http://localhost:3000'; // Replace with your API base URL
+export const BASE_URL = 'http://localhost:3000'; // Replace with your API base URL
 
 const fetchUtils = async (endpoint: string, options: any = {}) => {
   const { method = 'GET', headers = {}, body } = options;
@@ -9,7 +9,6 @@ const fetchUtils = async (endpoint: string, options: any = {}) => {
     method,
     headers: {
       'accept': 'application/json',
-      'Content-Type': 'application/json',
       ...headers,
     },
   };

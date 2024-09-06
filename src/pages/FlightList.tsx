@@ -5,7 +5,7 @@ import { DeleteOutlined, EditOutlined, EyeOutlined, QuestionCircleOutlined } fro
 import AppLayout from '../layout';
 import { getToken } from '../utils/storage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import fetchUtils from '../utils/fetchUtils';
+import fetchUtils, { BASE_URL } from '../utils/fetchUtils';
 import { ErrorResponse } from '../types/response';
 
 
@@ -75,9 +75,9 @@ export default function FlightList() {
       setIsLoading(true);
 
       const code = searchParams.get('code');
-      const baseUrl = `http://localhost:3000/flights?page=${tableParams.pagination?.current}&size=${tableParams.pagination?.pageSize}`
+      const getUrl = `${BASE_URL}/flights?page=${tableParams.pagination?.current}&size=${tableParams.pagination?.pageSize}`
 
-      const url = code ? baseUrl + `&code=${code}` : baseUrl;
+      const url = code ? getUrl + `&code=${code}` : getUrl;
 
       fetch(url, {
         headers: {
@@ -156,7 +156,7 @@ export default function FlightList() {
     }
 
     const handleDeleteFlight = (id: string) => {
-      fetch(`http://localhost:3000/flights/${id}`, {
+      fetch(`${BASE_URL}/flights/${id}`, {
         method: 'DELETE',
         headers: {
           'accept': 'application/json',

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Breadcrumb, Button, Layout, Space, theme } from 'antd';
-import { clearToken, getUser } from './utils/storage';
+import { clearToken, getToken, getUser } from './utils/storage';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthUser } from './types/user';
+import { isTokenExpired } from './utils/auth';
 
 const { Header, Content } = Layout;
 
@@ -20,6 +21,20 @@ const AppLayout = ({ children }: { children: any }) => {
     setTimeout(navigate, 0, "/login");
   }
 
+
+  useEffect(() => {
+
+    const token = getToken();
+    if (token) {
+      if (isTokenExpired(token)) {
+        clearToken();
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  }, [location.pathname, navigate]);
+  
   return (
     <Layout>
       <Header

@@ -29,6 +29,11 @@ const App: React.FC = () => {
             <CreateFlight />
           </ProtectedRoute>
         }/>
+        <Route path="/flights/edit/:flightId" element={
+          <ProtectedRoute>
+            <CreateFlight />
+          </ProtectedRoute>
+        }/>
     </Routes>
     </BrowserRouter>
   );

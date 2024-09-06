@@ -150,9 +150,11 @@ export default function FlightList() {
       },
     ];
 
-    const handlePreview = (record: Flight) => {
+    const handlePreview = async (record: Flight) => {
+      await getImage(record.id);
       setIsModalOpen(true);
       setSelectedFlight(record);
+
     }
 
     const handleDeleteFlight = (id: string) => {
@@ -189,7 +191,24 @@ export default function FlightList() {
       });
     }
 
- 
+    const getImage = async (flightId: string) => {
+
+      setIsImageLoading(true);
+
+      const result = await fetchUtils(`/flights/${flightId}/photo` , {
+        headers: {
+           'accept': 'image/*'
+        },
+      });
+
+      setIsImageLoading(false);
+
+
+      const srr = URL.createObjectURL(result);
+      console.log(srr)
+
+    }
+
 
     return (
       <>

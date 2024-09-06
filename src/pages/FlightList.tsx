@@ -7,6 +7,7 @@ import { getToken } from '../utils/storage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import fetchUtils, { BASE_URL } from '../utils/fetchUtils';
 import { ErrorResponse } from '../types/response';
+import { getFlightList } from '../service/flight';
 
 
 interface TableParams {
@@ -51,54 +52,44 @@ export default function FlightList() {
 
     // Check and validate query params in useEffect
     useEffect(() => {
-      const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
-      const pageSize = searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 5;
-
-      if (Object.entries(searchParams).length === 0) {
-        setSearchParams((prev) => {
-          prev.set('page', `${page}`);
-          prev.set('pageSize', `${pageSize}`);
-          return prev;
-        });
-      }
-
+      const page = Number(searchParams.get("page")) || 1;
+      const pageSize = Number(searchParams.get("pageSize")) || 5;
+    
       if (!validateQueryParams(page, pageSize)) {
-        // If parameters are invalid, redirect to a "Bad request" page
         navigate('/bad-request');
+        return; // Early return to prevent further execution
+      }
+    
+      // Set default query params if none exist
+      if (!searchParams.has("page") || !searchParams.has("pageSize")) {
+        setSearchParams((prev) => {
+          const newParams = new URLSearchParams(prev.toString());
+          if (!searchParams.has("page")) newParams.set("page", `${page}`);
+          if (!searchParams.has("pageSize")) newParams.set("pageSize", `${pageSize}`);
+          return newParams;
+        });
       } else {
         // Fetch flights if the parameters are valid
         getFlights();
       }
-    }, [searchParams]);
+    }, [searchParams.get("page"), searchParams.get("pageSize"), searchParams.get("code")]);
+    
 
-    const getFlights = () => {
+    const getFlights = async () => {
       setIsLoading(true);
 
       const code = searchParams.get('code');
-      const getUrl = `${BASE_URL}/flights?page=${tableParams.pagination?.current}&size=${tableParams.pagination?.pageSize}`
+      const data = await getFlightList(tableParams.pagination?.current!, tableParams.pagination?.pageSize!, code!);
 
-      const url = code ? getUrl + `&code=${code}` : getUrl;
-
-      fetch(url, {
-        headers: {
-          'accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setIsLoading(false);
-          setTableParams({
-            ...tableParams,
-            pagination: {
-              ...tableParams.pagination,
-              total: data.total,
-            },
-          });
-          setFlights(data.resources);
-        }).catch(() => {
-          setIsLoading(false);
-        });
+      setIsLoading(false);
+      setTableParams({
+        ...tableParams,
+        pagination: {
+          ...tableParams.pagination,
+          total: data.total,
+        },
+      });
+        setFlights(data.resources);
     }
 
     const handleTableChange: TableProps<Flight>['onChange'] = (pagination) => {

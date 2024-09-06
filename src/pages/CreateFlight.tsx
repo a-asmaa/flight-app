@@ -5,9 +5,8 @@ import AppLayout from '../layout';
 import fetchUtils from '../utils/fetchUtils';
 import { useNavigate, useParams } from 'react-router';
 import { FieldType, Flight } from '../types/flight';
-import { getToken } from '../utils/storage';
-import { getPayload } from '../utils/getPayload';
 import { ErrorResponse } from '../types/response';
+import { createFlight, getPayload, updateFlight } from '../service/flight';
 
 
 const CreateFlight: React.FC = () => {
@@ -54,16 +53,8 @@ const CreateFlight: React.FC = () => {
       const payload = getPayload(values, departureDate, withImage);
   
       if(flightId) { // update flight
-        const url = `/flights/${flightId}`.concat('', withImage ? '/withPhoto' : '');        
-        const result = await fetchUtils(url , {
-          method: 'PUT',
-          body: payload,
-          headers: {
-            "Content-Type": withImage ? "multipart/form-data" : "application/json",
-            "Authorization": `Bearer ${getToken()}`
-          }
-        });
-  
+       
+        const result = await updateFlight(flightId, payload, withImage);
         console.log(result);
         messageApi.open({ // TODO: fix this
           type: 'success',
@@ -71,16 +62,8 @@ const CreateFlight: React.FC = () => {
         });
       } else { //create new flight
 
-        const url = '/flights'.concat('', withImage ? '/withPhoto' : '');        
-        const result = await fetchUtils(url, {
-          method: 'POST',
-          headers: {
-            "Content-Type": withImage ? "multipart/form-data" : "application/json",
-            "authorization": `Bearer ${getToken()}`
-          },
-          body: payload,
-        });
-  
+        
+        const result = await createFlight(payload, withImage);
         console.log(result);
         messageApi.open({ // TODO: fix this
           type: 'success',
@@ -156,6 +139,7 @@ const CreateFlight: React.FC = () => {
               rules={[{ required: true, message: 'Please select departure date!' }]}
             >
               <DatePicker style={{ width: '100%' }} format={'YYYY-MM-DD'}  
+                // defaultValue={defaultValues.departureDate}
                 onChange={(date, dateString) => {
                   setDepartureDate(dateString as string)
                   console.log(dateString, departureDate);

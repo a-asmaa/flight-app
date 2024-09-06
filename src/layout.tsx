@@ -37,7 +37,7 @@ const AppLayout = ({ children }: { children: any }) => {
           color: 'white',
         }}
       >
-        <img className="demo-logo" src="/assets/Logo.svg" alt="logo" style={{ height: 40 }} />
+        <img className="demo-logo" src="/flight-logo.png" alt="logo" style={{ height: 40 }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <h4>{user.name}, Logged in</h4>
           <Button onClick={logout} type="primary">Logout</Button>
@@ -50,7 +50,7 @@ const AppLayout = ({ children }: { children: any }) => {
               <Link to="/flights" className='list-link'>Flight List </Link>
             </Breadcrumb.Item>
           </Breadcrumb>
-          { !location.pathname.includes('/create') && <Link to="/flights/create" className='create-link'>Create New Flight</Link> }
+          { (!location.pathname.includes('/create') && !location.pathname.includes('/edit')) && <Link to="/flights/create" className='create-link'>Create New Flight</Link> }
         </Space>
         <div
           style={{

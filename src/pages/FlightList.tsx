@@ -1,24 +1,33 @@
 import React, { useEffect, useState } from 'react'
 import { Flight } from '../types/flight';
-import { GetProp, message, Modal, Popconfirm, Space, Table, TablePaginationConfig, TableProps } from 'antd';
+import { GetProps, Input, message, Modal, Popconfirm, Space, Spin, Table, TablePaginationConfig, TableProps } from 'antd';
 import { DeleteOutlined, EditOutlined, EyeOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import AppLayout from '../layout';
 import { getToken } from '../utils/storage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import fetchUtils from '../utils/fetchUtils';
+import { ErrorResponse } from '../types/response';
 
 
 interface TableParams {
   pagination?: TablePaginationConfig;
 }
 
+
+type SearchProps = GetProps<typeof Input.Search>;
+
+const { Search } = Input;
+
+
 export default function FlightList() {
     const token = getToken();
     const navigate = useNavigate();
     const [flights, setFlights] = useState<Flight[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [imageLoading, setIsImageLoading] = useState<boolean>(false);
     const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
+    
     let [searchParams, setSearchParams] = useSearchParams();
 
     const [tableParams, setTableParams] = useState<TableParams>({
@@ -64,7 +73,13 @@ export default function FlightList() {
 
     const getFlights = () => {
       setIsLoading(true);
-      fetch(`http://localhost:3000/flights?page=${tableParams.pagination?.current}&size=${tableParams.pagination?.pageSize}`, {
+
+      const code = searchParams.get('code');
+      const baseUrl = `http://localhost:3000/flights?page=${tableParams.pagination?.current}&size=${tableParams.pagination?.pageSize}`
+
+      const url = code ? baseUrl + `&code=${code}` : baseUrl;
+
+      fetch(url, {
         headers: {
           'accept': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -124,7 +139,7 @@ export default function FlightList() {
         render: (_, record) => (
           <Space size="middle">
             {record.img && <EyeOutlined onClick={() => handlePreview(record)} />}
-            <EditOutlined onClick={() => console.log(record)} />
+            <EditOutlined onClick={() => navigate(`/flights/edit/${record.id}`)} />
             <Popconfirm title="Delete Flight" description={`Are you sure to delete flight with code ${record.code}?`} 
               okText="Delete" cancelText="Cancel" icon={<QuestionCircleOutlined style={{ color: 'red' }} />} 
               onConfirm={() => handleDeleteFlight(record.id)}>
@@ -161,14 +176,39 @@ export default function FlightList() {
         });
     }
 
+
+    const onSearch: SearchProps['onSearch'] = async (value, _e, info) => {
+      console.log(info?.source, value);
+
+      if(!value) return;
+
+      // add search params to url
+      setSearchParams((prev) => {
+        prev.set('code', `${value}`);
+        return prev;
+      });
+    }
+
+ 
+
     return (
       <>
         {contextHolder}
         <AppLayout children={
-          <Table columns={columns} dataSource={flights} pagination={tableParams.pagination} 
-                 loading={isLoading} onChange={handleTableChange} />} />
-        <Modal open={isModalOpen}>
-          <img src={selectedFlight?.img} alt="preview" />
+          <>
+            <div style={{marginBottom: '20px', justifyContent: 'end', display: 'flex'}}>
+              <Search placeholder="search by code" onSearch={onSearch} onClear={() => setSearchParams((prev) => { prev.delete('code'); return prev })} allowClear style={{ width: 300 }} />
+            </div>
+           
+            <Table columns={columns} dataSource={flights} pagination={tableParams.pagination} 
+                 loading={isLoading} onChange={handleTableChange} />
+          </>} />
+        <Modal open={isModalOpen} onCancel={() => setIsModalOpen(false)} 
+            footer={null}>
+
+          {imageLoading ? 
+            <Spin size='large' /> :
+            <img src={selectedFlight?.img} alt="preview" />}
         </Modal>
       </>
     )

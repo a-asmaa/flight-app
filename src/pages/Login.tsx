@@ -32,6 +32,9 @@ const Login: React.FC = () => {
           'email': values.username,
           'password': values.password,
         }),
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       console.log(result);

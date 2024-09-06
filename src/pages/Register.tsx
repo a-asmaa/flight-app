@@ -34,6 +34,9 @@ const Register: React.FC = () => {
           'email': values.email,
           'password': values.password,
         }),
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       console.log(result);

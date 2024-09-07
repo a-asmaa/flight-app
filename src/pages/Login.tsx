@@ -11,17 +11,12 @@ type FieldType = {
   remember?: boolean;
 };
 
-const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
-  console.log('Failed:', errorInfo);
-};
-
 const Login: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
 
   const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
-    console.log('Success:', values);
 
     try {
       setIsLoading(true);
@@ -37,7 +32,6 @@ const Login: React.FC = () => {
         }
       });
 
-      console.log(result);
       setUserData(result);
       messageApi.open({
         type: 'success',
@@ -46,7 +40,7 @@ const Login: React.FC = () => {
 
       setTimeout(navigate, 0, "/flights");
     } catch (err) {
-      console.log(err);
+      console.error(err);
       messageApi.open({
         type: 'error',
         content: err + " Please try again!",
@@ -77,7 +71,6 @@ const Login: React.FC = () => {
             name="login"
             layout="vertical"
             onFinish={onFinish}
-            onFinishFailed={onFinishFailed}
             autoComplete="off"
           >
             <Form.Item<FieldType>

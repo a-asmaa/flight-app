@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, DatePicker, Form, Input, InputNumber, Upload, Typography, Row, Col, message, FormProps, Spin, UploadProps, Space } from 'antd';
+import { Button, DatePicker, Form, Input, InputNumber, Upload, Typography, Row, Col, message, FormProps, Spin, UploadProps, Space, App } from 'antd';
 import AppLayout from '../layout';
 import fetchUtils from '../utils/fetchUtils';
 import { useNavigate, useParams } from 'react-router';
@@ -11,7 +11,6 @@ import { createFlight, getPayload, updateFlight } from '../service/flight';
 
 const CreateFlight: React.FC = () => {
 
-  const [messageApi, contextHolder] = message.useMessage();
   const [departureDate, setDepartureDate] = useState<string|null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [defaultValues, setDefaultValues] = useState<Flight>({
@@ -24,13 +23,13 @@ const CreateFlight: React.FC = () => {
   });
   const navigate = useNavigate();
   const {flightId} = useParams();
+  const { message } = App.useApp();
 
 
   const normFile = (e: any) => {
     if (Array.isArray(e)) {
       return e;
     }
-    console.log(e, "files");
     return e?.fileList;
   };
   
@@ -55,27 +54,33 @@ const CreateFlight: React.FC = () => {
       if(flightId) { // update flight
        
         const result = await updateFlight(flightId, payload, withImage);
-        console.log(result);
-        messageApi.open({ // TODO: fix this
-          type: 'success',
-          content: 'Flight updated successfully',
-        });
+
+        if(result && result.id) {
+          message.success({ 
+            type: 'success',
+            content: 'Flight updated successfully',
+          });
+        } else {
+          message.error(result.message, 5);
+        }
       } else { //create new flight
 
-        
         const result = await createFlight(payload, withImage);
-        console.log(result);
-        messageApi.open({ // TODO: fix this
-          type: 'success',
-          content: 'Flight created successfully',
-        });
+
+        if(result && result.id) {
+          message.success({ 
+            type: 'success',
+            content: 'Flight created successfully',
+          });
+        } else {
+          message.error(result.message, 5);
+        }
       }
 
       setTimeout(navigate, 0, "/flights");
     } catch (err) {
       console.log(err);
-      messageApi.open({ // TODO: fix this
-        type: 'error',
+      message.error({ // TODO: fix this
         content: (err as ErrorResponse).message + " Please try again!",
         duration: 5,
       });
@@ -87,15 +92,11 @@ const CreateFlight: React.FC = () => {
     try {
       setLoading(true);
       const result = await fetchUtils(`/flights/${id}/details`);
-      console.log(flightId, "flightId", result);
       setDefaultValues(result);
 
     } catch (error) {
-      messageApi.error({
-        type: 'error',
-        content: error + " Please try again!",
-        duration: 3,
-      });
+      message.error('Failed to fetch flight details. Please try again.');
+
     } finally {
       setLoading(false);
     }
@@ -110,7 +111,6 @@ const CreateFlight: React.FC = () => {
 
   return (
     <AppLayout>
-     { contextHolder}
       { loading ? 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '380px'}}>
           <Spin size='large' />
@@ -142,7 +142,6 @@ const CreateFlight: React.FC = () => {
                 // defaultValue={defaultValues.departureDate}
                 onChange={(date, dateString) => {
                   setDepartureDate(dateString as string)
-                  console.log(dateString, departureDate);
                   }}/>
             </Form.Item>
 

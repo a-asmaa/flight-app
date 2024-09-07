@@ -13,10 +13,13 @@ export const createFlight = async (payload: string | FormData, withImage: boolea
         method: 'POST',
         body: payload,
         headers: {
-            "Content-Type": withImage ? "multipart/form-data" : "application/json",
-            "authorization": `Bearer ${token}`
-          },
+            "Authorization": `Bearer ${token}`
+          }
     });
+
+    // if (!response.ok) {
+    //     throw new Error(`HTTP error! status: ${response.status}`);
+    // }
     return response.json();
 
 };
@@ -30,7 +33,6 @@ export const updateFlight = async (flightId: string, payload: string | FormData,
         method: 'PUT',
         body: payload,
         headers: {
-            "Content-Type": withImage ? "multipart/form-data" : "application/json",
             "Authorization": `Bearer ${token}`
           }
     });

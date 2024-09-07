@@ -76,20 +76,34 @@ export default function FlightList() {
     
 
     const getFlights = async () => {
-      setIsLoading(true);
 
-      const code = searchParams.get('code');
-      const data = await getFlightList(tableParams.pagination?.current!, tableParams.pagination?.pageSize!, code!);
 
-      setIsLoading(false);
-      setTableParams({
-        ...tableParams,
-        pagination: {
-          ...tableParams.pagination,
-          total: data.total,
-        },
-      });
+      try {
+        setIsLoading(true);
+
+        const code = searchParams.get('code');
+        const data = await getFlightList(tableParams.pagination?.current!, tableParams.pagination?.pageSize!, code!);
+  
+        setTableParams({
+          ...tableParams,
+          pagination: {
+            ...tableParams.pagination,
+            total: data.total,
+          },
+        });
         setFlights(data.resources);
+
+      } catch (error) {
+         console.error('Error fetching flights:', error);
+
+          // Display error message
+          messageApi.open({
+            type: 'error',
+            content: 'Failed to load flights. Please try again.',
+          });
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     const handleTableChange: TableProps<Flight>['onChange'] = (pagination) => {
@@ -171,8 +185,6 @@ export default function FlightList() {
 
 
     const onSearch: SearchProps['onSearch'] = async (value, _e, info) => {
-      console.log(info?.source, value);
-
       if(!value) return;
 
       // add search params to url
@@ -194,10 +206,8 @@ export default function FlightList() {
 
       setIsImageLoading(false);
 
-
-      const srr = URL.createObjectURL(result);
-      console.log(srr)
-
+      const src = URL.createObjectURL(result);
+      console.log(src)
     }
 
 

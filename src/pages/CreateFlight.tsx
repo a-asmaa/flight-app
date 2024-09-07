@@ -116,18 +116,20 @@ const CreateFlight: React.FC = () => {
           <Spin size='large' />
         </div> 
       : 
-      <Row style={{ marginTop: 5, width: '100%' }}>
-        <Col xs={24} sm={20} md={16} lg={16} xl={12}>
-          <Typography.Title level={3} style={{ marginBottom: 20 }}>
+      <Row style={{ width: '100%', placeContent: 'center' }}>
+        <Col xs={24} sm={20} md={16} lg={12} xl={12}>
+          <Typography.Title level={3} style={{ marginBottom: 40 }}>
             { flightId ? 'Edit' : 'Create' } Flight
           </Typography.Title>
 
           <Form
-            labelCol={{ span: 8 }}
+            labelCol={{ span: 5 }}
             wrapperCol={{ span: 16 }}
             layout="horizontal"
-            style={{ maxWidth: '100%' }}
             onFinish={handleSaveFlight}
+            labelAlign='left'
+            style={{ maxWidth: '100%' }}
+
           >
             <Form.Item label="Code" name="code" rules={[{ required: true, message: 'Please enter flight code!' }]}>
               <Input defaultValue={defaultValues.code} placeholder="Enter flight code" />
@@ -168,14 +170,12 @@ const CreateFlight: React.FC = () => {
             </Form.Item>
 
             <Form.Item wrapperCol={{ offset: 8, span: 16 }} style={{}}>
-              <Space>
-                <Button type="primary" htmlType="submit">
+                <Button type="primary" htmlType="submit" style={{ borderRadius: '4px', marginRight: '10px' }}>
                   Submit
                 </Button>
                 <Button type="default" onClick={() => navigate('/flights')} >
                   Cancel
                 </Button>
-              </Space>
             </Form.Item>
           </Form>
         </Col>

@@ -74,6 +74,8 @@ const AppLayout = ({ children }: { children: any }) => {
             minHeight: 380,
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
+            width: (location.pathname.includes('edit') || location.pathname.includes('/create')) ? '80%' : '100%',
+            margin: 'auto',
           }}
         >
           {children}
